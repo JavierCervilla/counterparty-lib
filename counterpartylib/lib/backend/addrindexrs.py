@@ -279,19 +279,20 @@ class AddrIndexRsThread (threading.Thread):
         self.send({"kill": True})
 
     def connect(self):
-        self.lastId = 0
-        while True:
-            logging.info('AddrIndexRs connecting...')
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.settimeout(SOCKET_TIMEOUT)
-            try:
-                self.sock.connect((self.host, self.port))
-            except:
-                logging.info('Error connecting to AddrIndexRs! Retrying in a few seconds')
-                time.sleep(5.0)
-            else:
-                logging.info('Connected to AddrIndexRs!')
-                break
+        logger.info("Connecting to AddrIndexRs")
+        # self.lastId = 0
+        # while True:
+        #     logging.info('AddrIndexRs connecting...')
+        #     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #     self.sock.settimeout(SOCKET_TIMEOUT)
+        #     try:
+        #         self.sock.connect((self.host, self.port))
+        #     except:
+        #         logging.info('Error connecting to AddrIndexRs! Retrying in a few seconds')
+        #         time.sleep(5.0)
+        #     else:
+        #         logging.info('Connected to AddrIndexRs!')
+        #         break
 
     def run(self):
         self.locker = threading.Condition()

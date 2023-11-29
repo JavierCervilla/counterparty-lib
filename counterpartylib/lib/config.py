@@ -1,4 +1,5 @@
 import sys
+import os
 
 """Variables prefixed with `DEFAULT` should be able to be overridden by
 configuration file and command‐line arguments."""
@@ -130,11 +131,25 @@ DEFAULT_UTXO_LOCKS_MAX_ADDRESSES = 1000
 DEFAULT_UTXO_LOCKS_MAX_AGE = 3.0 #in seconds
 
 ADDRESS_OPTION_REQUIRE_MEMO = 1
-ADDRESS_OPTION_MAX_VALUE = ADDRESS_OPTION_REQUIRE_MEMO # Or list of all the address options
+ADDRESS_OPTION_MAX_VALUE = ADDRESS_OPTION_REQUIRE_MEMO  # Or list of all the address options
 OLD_STYLE_API = True
 
 API_LIMIT_ROWS = 1000
 
 MPMA_LIMIT = 1000
+
+#  CHANGES
+
+RPC_USER = os.environ.get("RPC_USER", 'rpc')
+RPC_PASSWORD = os.environ.get("RPC_PASSWORD", 'rpc')
+RPC_IP = os.environ.get("RPC_IP", '127.0.0.1')
+RPC_PORT = os.environ.get("RPC_PORT", '8332')
+QUICKNODE_URL = os.environ.get("QUICKNODE_URL", None)
+RPC_TOKEN = os.environ.get("RPC_TOKEN", None)
+if QUICKNODE_URL and RPC_TOKEN:
+    RPC = f"https://{RPC_USER}:{RPC_PASSWORD}@{QUICKNODE_URL}/{RPC_TOKEN}"
+else:
+    RPC = f"http://{RPC_USER}:{RPC_PASSWORD}@{RPC_IP}:{RPC_PORT}"
+BACKEND_URL = RPC
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

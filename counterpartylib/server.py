@@ -233,10 +233,11 @@ def initialise_config(database_file=None, log_file=None, api_log_file=None,
         config.BACKEND_USER = 'bitcoinrpc'
 
     # Backend Core RPC password (Bitcoin Core)
-    if backend_password:
-        config.BACKEND_PASSWORD = backend_password
-    else:
-        raise ConfigurationError('backend RPC password not set. (Use configuration file or --backend-password=PASSWORD)')
+    print(config.RPC)
+    #  if backend_password:
+    #      config.BACKEND_PASSWORD = backend_password
+    #  else:
+    #      raise ConfigurationError('backend RPC password not set. (Use configuration file or --backend-password=PASSWORD)')
 
     # Backend Core RPC SSL
     if backend_ssl:
@@ -261,11 +262,11 @@ def initialise_config(database_file=None, log_file=None, api_log_file=None,
         config.BACKEND_POLL_INTERVAL = 0.5
 
     # Construct backend URL.
-    config.BACKEND_URL = config.BACKEND_USER + ':' + config.BACKEND_PASSWORD + '@' + config.BACKEND_CONNECT + ':' + str(config.BACKEND_PORT)
-    if config.BACKEND_SSL:
-        config.BACKEND_URL = 'https://' + config.BACKEND_URL
-    else:
-        config.BACKEND_URL = 'http://' + config.BACKEND_URL
+    # config.BACKEND_URL = config.BACKEND_USER + ':' + config.BACKEND_PASSWORD + '@' + config.BACKEND_CONNECT + ':' + str(config.BACKEND_PORT)
+    # if config.BACKEND_SSL:
+    #     config.BACKEND_URL = 'https://' + config.BACKEND_URL
+    # else:
+    #     config.BACKEND_URL = 'http://' + config.BACKEND_URL
 
 
     # Indexd RPC host
@@ -472,19 +473,21 @@ def initialise_db():
 def connect_to_backend():
     if not config.FORCE:
         logger.info('Connecting to backend.')
-        backend.getblockcount()
-
+        #  backend.getblockcount()
 
 def start_all(db):
 
+    logger.info("IM HERE")
     # Backend.
     connect_to_backend()
+    logger.info("IM HERE 2")
 
     # API Status Poller.
     api_status_poller = api.APIStatusPoller()
     api_status_poller.daemon = True
     api_status_poller.start()
 
+    logger.info('Starting server.')
     # API Server.
     api_server = api.APIServer()
     api_server.daemon = True
@@ -524,12 +527,14 @@ def generate_move_random_hash(move):
 
 
 def configure_rpc(rpc_password=None):
+    '''changed to config from env vars configurated in config.py'''
+    pass
     # Server API RPC password
-    if rpc_password:
-        config.RPC_PASSWORD = rpc_password
-        config.RPC = 'http://' + urlencode(config.RPC_USER) + ':' + urlencode(config.RPC_PASSWORD) + '@' + config.RPC_HOST + ':' + str(config.RPC_PORT) + config.RPC_WEBROOT
-    else:
-        config.RPC = 'http://' + config.RPC_HOST + ':' + str(config.RPC_PORT) + config.RPC_WEBROOT
+    #  if rpc_password:
+    #      config.RPC_PASSWORD = rpc_password
+    #      config.RPC = 'http://' + urlencode(config.RPC_USER) + ':' + urlencode(config.RPC_PASSWORD) + '@' + config.RPC_HOST + ':' + str(config.RPC_PORT) + config.RPC_WEBROOT
+    #  else:
+    #      config.RPC = 'http://' + config.RPC_HOST + ':' + str(config.RPC_PORT) + config.RPC_WEBROOT
 
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
