@@ -95,6 +95,9 @@ def parse_tx(db, tx):
             # Protocol change.
             rps_enabled = tx['block_index'] >= 308500 or config.TESTNET or config.REGTEST
 
+            str_msg = message.decode('utf-8', errors='ignore') if message else None
+            if 'stamp:' not in str_msg.lower():
+                return
             if message_type_id == send.ID:
                 send.parse(db, tx, message)
             elif message_type_id == enhanced_send.ID and util.enabled('enhanced_sends', block_index=tx['block_index']):
