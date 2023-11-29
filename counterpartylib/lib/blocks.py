@@ -64,6 +64,7 @@ with open(CURR_DIR + '/../mainnet_burns.csv', 'r') as f:
     for line in mainnet_burns_reader:
         MAINNET_BURNS[line['tx_hash']] = line
 
+
 def parse_tx(db, tx):
     """Parse the transaction, return True for success."""
     cursor = db.cursor()
@@ -73,9 +74,8 @@ def parse_tx(db, tx):
             # Only one source and one destination allowed for now.
             if len(tx['source'].split('-')) > 1:
                 return
-            if tx['destination']:
-                if len(tx['destination'].split('-')) > 1:
-                    return
+            if tx['destination'] and len(tx['destination'].split('-')) > 1:
+                return
 
             # Burns.
             if tx['destination'] == config.UNSPENDABLE:
@@ -84,7 +84,9 @@ def parse_tx(db, tx):
 
             if len(tx['data']) > 1:
                 try:
-                    message_type_id, message = message_type.unpack(tx['data'], tx['block_index'])
+                    message_type_id, message = message_type.unpack(
+                        tx['data'], tx['block_index']
+                    )
                 except struct.error:    # Deterministically raised.
                     message_type_id = None
                     message = None
@@ -93,24 +95,67 @@ def parse_tx(db, tx):
                 message = None
 
             # Protocol change.
-            rps_enabled = tx['block_index'] >= 308500 or config.TESTNET or config.REGTEST
-
-            str_msg = message.decode('utf-8', errors='ignore') if message else None
+            rps_enabled = (
+                tx['block_index'] >= 308500 or
+                config.TESTNET
+                or config.REGTEST
+            )
+            # ---------------------------------------------------
+            # Stamp related only check
+            str_msg = (
+                message.decode('utf-8', errors='ignore')
+                if message
+                else None
+            )
             if 'stamp:' not in str_msg.lower():
                 return
+            # end stamp related only check
+            # ---------------------------------------------------
             if message_type_id == send.ID:
                 send.parse(db, tx, message)
-            elif message_type_id == enhanced_send.ID and util.enabled('enhanced_sends', block_index=tx['block_index']):
+            elif (
+                message_type_id == enhanced_send.ID
+                and util.enabled(
+                    'enhanced_sends',
+                    block_index=tx['block_index']
+                )
+            ):
                 enhanced_send.parse(db, tx, message)
-            elif message_type_id == mpma.ID and util.enabled('mpma_sends', block_index=tx['block_index']):
+            elif (
+                message_type_id == mpma.ID and
+                util.enabled('mpma_sends', block_index=tx['block_index'])
+            ):
                 mpma.parse(db, tx, message)
             elif message_type_id == order.ID:
                 order.parse(db, tx, message)
             elif message_type_id == btcpay.ID:
                 btcpay.parse(db, tx, message)
-            elif message_type_id == issuance.ID or (util.enabled("issuance_backwards_compatibility", block_index=tx['block_index']) and message_type_id == issuance.LR_ISSUANCE_ID):
+            elif (
+                message_type_id == issuance.ID
+                or (
+                    util.enabled(
+                        "issuance_backwards_compatibility",
+                        block_index=tx['block_index']
+                    )
+                    and message_type_id == issuance.LR_ISSUANCE_ID
+                )
+            ):
                 issuance.parse(db, tx, message, message_type_id)
-            elif (message_type_id == issuance.SUBASSET_ID and util.enabled('subassets', block_index=tx['block_index'])) or (util.enabled("issuance_backwards_compatibility", block_index=tx['block_index']) and message_type_id == issuance.LR_SUBASSET_ID):
+            elif (
+                (
+                    message_type_id == issuance.SUBASSET_ID
+                    and util.enabled(
+                        'subassets',
+                        block_index=tx['block_index']
+                    )
+                ) or (
+                    util.enabled(
+                        "issuance_backwards_compatibility",
+                        block_index=tx['block_index']
+                    )
+                    and message_type_id == issuance.LR_SUBASSET_ID
+                )
+            ):
                 issuance.parse(db, tx, message, message_type_id)
             elif message_type_id == broadcast.ID:
                 broadcast.parse(db, tx, message)
@@ -124,21 +169,52 @@ def parse_tx(db, tx):
                 rps.parse(db, tx, message)
             elif message_type_id == rpsresolve.ID and rps_enabled:
                 rpsresolve.parse(db, tx, message)
-            elif message_type_id == destroy.ID and util.enabled('destroy_reactivated', block_index=tx['block_index']):
+            elif (
+                message_type_id == destroy.ID
+                and util.enabled(
+                    'destroy_reactivated',
+                    block_index=tx['block_index']
+                )
+            ):
                 destroy.parse(db, tx, message)
-            elif message_type_id == sweep.ID and util.enabled('sweep_send', block_index=tx['block_index']):
+            elif (
+                message_type_id == sweep.ID
+                and util.enabled(
+                    'sweep_send',
+                    block_index=tx['block_index']
+                )
+            ):
                 sweep.parse(db, tx, message)
-            elif message_type_id == dispenser.ID and util.enabled('dispensers', block_index=tx['block_index']):
+            elif (
+                message_type_id == dispenser.ID
+                and util.enabled(
+                    'dispensers',
+                    block_index=tx['block_index']
+                )
+            ):
                 dispenser.parse(db, tx, message)
-            elif message_type_id == dispenser.DISPENSE_ID and util.enabled('dispensers', block_index=tx['block_index']):
+            elif (
+                message_type_id == dispenser.DISPENSE_ID
+                and util.enabled(
+                    'dispensers',
+                    block_index=tx['block_index']
+                )
+            ):
                 dispenser.dispense(db, tx)
             else:
-                cursor.execute('''UPDATE transactions \
-                                           SET supported=? \
-                                           WHERE tx_hash=?''',
-                                        (False, tx['tx_hash']))
+                cursor.execute(
+                    '''
+                    UPDATE transactions
+                    SET supported=?
+                    WHERE tx_hash=?
+                    ''',
+                    (False, tx['tx_hash'])
+                )
                 if tx['block_index'] != config.MEMPOOL_BLOCK_INDEX:
-                    logger.info('Unsupported transaction: hash {}; data {}'.format(tx['tx_hash'], tx['data']))
+                    logger.info(
+                        'Unsupported transaction: hash {}; data {}'
+                        .format(tx['tx_hash'], tx['data'])
+                    )
                 cursor.close()
                 return False
 
