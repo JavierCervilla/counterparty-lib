@@ -107,6 +107,7 @@ def parse_tx(db, tx):
                 if message
                 else None
             )
+            logger.info('str_msg: {}'.format(str_msg))
             if 'stamp:' not in str_msg.lower():
                 return
             # end stamp related only check
